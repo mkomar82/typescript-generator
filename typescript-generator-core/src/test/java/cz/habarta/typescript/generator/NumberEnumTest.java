@@ -1,16 +1,16 @@
 
 package cz.habarta.typescript.generator;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
+
 import cz.habarta.typescript.generator.compiler.EnumKind;
 import cz.habarta.typescript.generator.parser.EnumModel;
 import cz.habarta.typescript.generator.parser.Model;
 import cz.habarta.typescript.generator.parser.ModelParser;
-import java.io.File;
-import java.util.Arrays;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class NumberEnumTest {
@@ -38,16 +38,6 @@ public class NumberEnumTest {
                 "    VALUE1 = 11,\n" +
                 "}",
                 output.trim());
-    }
-
-    @Test
-    public void testJavadoc() {
-        final Settings settings = TestUtils.settings();
-        settings.javadocXmlFiles = Arrays.asList(new File("target/test-javadoc.xml"));
-        final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(SomeCode.class));
-        Assert.assertTrue(output.contains("Documentation for SomeCode enum."));
-        Assert.assertTrue(output.contains("Documentation for VALUE0."));
-        Assert.assertTrue(output.contains("Documentation for VALUE1."));
     }
 
     /**
