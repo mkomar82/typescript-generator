@@ -11,438 +11,464 @@ import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Generates TypeScript declaration file from specified java classes.
- * For more information see README and Wiki on GitHub.
+ * Generates TypeScript declaration file from specified java classes. For more
+ * information see README and Wiki on GitHub.
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateMojo extends AbstractMojo {
 
-    /**
-     * Path and name of generated TypeScript file.
-     */
-    @Parameter
-    private File outputFile;
+	/**
+	 * Path and name of generated TypeScript file.
+	 */
+	@Parameter
+	private File outputFile;
 
-    /**
-     * Output file format, can be 'declarationFile' (.d.ts) or 'implementationFile' (.ts).
-     * Setting this parameter to 'implementationFile' allows to generate runnable TypeScript code.
-     * Default value is 'declarationFile'.
-     */
-    @Parameter
-    private TypeScriptFileType outputFileType;
+	/**
+	 * Output file format, can be 'declarationFile' (.d.ts) or
+	 * 'implementationFile' (.ts). Setting this parameter to
+	 * 'implementationFile' allows to generate runnable TypeScript code. Default
+	 * value is 'declarationFile'.
+	 */
+	@Parameter
+	private TypeScriptFileType outputFileType;
 
-    /**
-     * Kind of generated TypeScript output, allowed values are 'global', 'module' or 'ambientModule'.
-     * Value 'global' means that declarations will be in global scope or namespace (no module).
-     * Value 'module' means that generated file will contain top-level 'export' declarations.
-     * Value 'ambientModule' means that generated declarations will be wrapped in 'declare module "mod" { }' declaration.
-     * Required parameter.
-     * For more information see Wiki page 'http://vojtechhabarta.github.io/typescript-generator/doc/ModulesAndNamespaces.html'.
-     */
-    @Parameter(required = true)
-    private TypeScriptOutputKind outputKind;
+	/**
+	 * Kind of generated TypeScript output, allowed values are 'global',
+	 * 'module' or 'ambientModule'. Value 'global' means that declarations will
+	 * be in global scope or namespace (no module). Value 'module' means that
+	 * generated file will contain top-level 'export' declarations. Value
+	 * 'ambientModule' means that generated declarations will be wrapped in
+	 * 'declare module "mod" { }' declaration. Required parameter. For more
+	 * information see Wiki page
+	 * 'http://vojtechhabarta.github.io/typescript-generator/doc/ModulesAndNamespaces.html'.
+	 */
+	@Parameter(required = true)
+	private TypeScriptOutputKind outputKind;
 
-    /**
-     * Name of generated ambient module.
-     * Used when 'outputKind' is set to 'ambientModule'.
-     */
-    @Parameter
-    private String module;
+	/**
+	 * Name of generated ambient module. Used when 'outputKind' is set to
+	 * 'ambientModule'.
+	 */
+	@Parameter
+	private String module;
 
-    /**
-     * Generates specified namespace. Not recommended to combine with modules. Default is no namespace.
-     */
-    @Parameter
-    private String namespace;
+	/**
+	 * Generates specified namespace. Not recommended to combine with modules.
+	 * Default is no namespace.
+	 */
+	@Parameter
+	private String namespace;
 
-    /**
-     * Turns proper module into UMD (Universal Module Definition) with specified namespace.
-     * Only applicable to declaration files.
-     */
-    @Parameter
-    private String umdNamespace;
+	/**
+	 * Turns proper module into UMD (Universal Module Definition) with specified
+	 * namespace. Only applicable to declaration files.
+	 */
+	@Parameter
+	private String umdNamespace;
 
-    /**
-     * JSON classes to process.
-     */
-    @Parameter
-    private List<String> classes;
+	/**
+	 * JSON classes to process.
+	 */
+	@Parameter
+	private List<String> classes;
 
-    /**
-     * JSON classes to process specified using glob patterns
-     * so it is possible to specify package or class name suffix.
-     * Glob patterns support two wildcards:
-     * Single "*" wildcard matches any character except for "." and "$".
-     * Double "**" wildcard matches any character.
-     * For more information and examples see Wiki page 'https://github.com/vojtechhabarta/typescript-generator/wiki/Class-Names-Glob-Patterns'.
-     */
-    @Parameter
-    private List<String> classPatterns;
+	/**
+	 * JSON classes to process specified using glob patterns so it is possible
+	 * to specify package or class name suffix. Glob patterns support two
+	 * wildcards: Single "*" wildcard matches any character except for "." and
+	 * "$". Double "**" wildcard matches any character. For more information and
+	 * examples see Wiki page
+	 * 'https://github.com/vojtechhabarta/typescript-generator/wiki/Class-Names-Glob-Patterns'.
+	 */
+	@Parameter
+	private List<String> classPatterns;
 
-    /**
-     * Scans specified JAX-RS {@link javax.ws.rs.core.Application} for JSON classes to process.
-     * Parameter contains fully-qualified class name.
-     * It is possible to exclude particular REST resource classes using {@link #excludeClasses} parameter.
-     */
-    @Parameter
-    private String classesFromJaxrsApplication;
+	/**
+	 * Scans specified JAX-RS {@link javax.ws.rs.core.Application} for JSON
+	 * classes to process. Parameter contains fully-qualified class name. It is
+	 * possible to exclude particular REST resource classes using
+	 * {@link #excludeClasses} parameter.
+	 */
+	@Parameter
+	private String classesFromJaxrsApplication;
 
-    /**
-     * Scans JAX-RS resources for JSON classes to process.
-     * It is possible to exclude particular REST resource classes using {@link #excludeClasses} parameter.
-     */
-    @Parameter
-    private boolean classesFromAutomaticJaxrsApplication;
+	/**
+	 * Scans JAX-RS resources for JSON classes to process. It is possible to
+	 * exclude particular REST resource classes using {@link #excludeClasses}
+	 * parameter.
+	 */
+	@Parameter
+	private boolean classesFromAutomaticJaxrsApplication;
 
-    /**
-     * List of classes excluded from processing.
-     */
-    @Parameter
-    private List<String> excludeClasses;
+	/**
+	 * List of classes excluded from processing.
+	 */
+	@Parameter
+	private List<String> excludeClasses;
 
-    /**
-     * Excluded classes specified using glob patterns.
-     */
-    @Parameter
-    private List<String> excludeClassPatterns;
+	/**
+	 * Excluded classes specified using glob patterns.
+	 */
+	@Parameter
+	private List<String> excludeClassPatterns;
 
-    /**
-     * If this list is not empty then TypeScript will only be generated for
-     * methods with one of the annotations defined in this list
-     */
-    @Parameter
-    private List<String> includePropertyAnnotations;
+	/**
+	 * If this list is not empty then TypeScript will only be generated for
+	 * methods with one of the annotations defined in this list
+	 */
+	@Parameter
+	private List<String> includePropertyAnnotations;
 
-    /**
-     * Library used in JSON classes.
-     * Supported values are
-     * 'jackson1' (annotations from 'org.codehaus.jackson.annotate' package),
-     * 'jackson2' (annotations from 'com.fasterxml.jackson.annotation' package),
-     * `jaxb` (annotations from 'javax.xml.bind.annotation' package).
-     * Required parameter, recommended value is 'jackson2'.
-     */
-    @Parameter(required = true)
-    private JsonLibrary jsonLibrary;
+	/**
+	 * Library used in JSON classes. Supported values are 'jackson1'
+	 * (annotations from 'org.codehaus.jackson.annotate' package), 'jackson2'
+	 * (annotations from 'com.fasterxml.jackson.annotation' package), `jaxb`
+	 * (annotations from 'javax.xml.bind.annotation' package). Required
+	 * parameter, recommended value is 'jackson2'.
+	 */
+	@Parameter(required = true)
+	private JsonLibrary jsonLibrary;
 
-    /**
-     * If true declared properties will be optional.
-     */
-    @Parameter
-    private boolean declarePropertiesAsOptional;
+	/**
+	 * If true declared properties will be optional.
+	 */
+	@Parameter
+	private boolean declarePropertiesAsOptional;
 
-    /**
-     * If true declared properties will be <code>readonly</code>.
-     */
-    @Parameter
-    private boolean declarePropertiesAsReadOnly;
+	/**
+	 * If true declared properties will be <code>readonly</code>.
+	 */
+	@Parameter
+	private boolean declarePropertiesAsReadOnly;
 
-    /**
-     * Prefix which will be removed from names of classes, interfaces, enums.
-     * For example if set to "Json" then mapping for "JsonData" will be "Data".
-     */
-    @Parameter
-    private String removeTypeNamePrefix;
+	/**
+	 * Prefix which will be removed from names of classes, interfaces, enums.
+	 * For example if set to "Json" then mapping for "JsonData" will be "Data".
+	 */
+	@Parameter
+	private String removeTypeNamePrefix;
 
-    /**
-     * Suffix which will be removed from names of classes, interfaces, enums.
-     * For example if set to "JSON" then mapping for "DataJSON" will be "Data".
-     */
-    @Parameter
-    private String removeTypeNameSuffix;
+	/**
+	 * Suffix which will be removed from names of classes, interfaces, enums.
+	 * For example if set to "JSON" then mapping for "DataJSON" will be "Data".
+	 */
+	@Parameter
+	private String removeTypeNameSuffix;
 
-    /**
-     * Prefix which will be added to names of classes, interfaces, enums.
-     * For example if set to "I" then mapping for "Data" will be "IData".
-     */
-    @Parameter
-    private String addTypeNamePrefix;
+	/**
+	 * Prefix which will be added to names of classes, interfaces, enums. For
+	 * example if set to "I" then mapping for "Data" will be "IData".
+	 */
+	@Parameter
+	private String addTypeNamePrefix;
 
-    /**
-     * Suffix which will be added to names of classes, interfaces, enums.
-     * For example if set to "Data" then mapping for "Person" will be "PersonData".
-     */
-    @Parameter
-    private String addTypeNameSuffix;
+	/**
+	 * Suffix which will be added to names of classes, interfaces, enums. For
+	 * example if set to "Data" then mapping for "Person" will be "PersonData".
+	 */
+	@Parameter
+	private String addTypeNameSuffix;
 
-    /**
-     * Specifies custom TypeScript names for Java classes.
-     * Multiple mappings can be specified, each using this format: "javaClassName:typescriptName".
-     * This takes precedence over other naming settings.
-     */
-    @Parameter
-    private List<String> customTypeNaming;
+	/**
+	 * Specifies custom TypeScript names for Java classes. Multiple mappings can
+	 * be specified, each using this format: "javaClassName:typescriptName".
+	 * This takes precedence over other naming settings.
+	 */
+	@Parameter
+	private List<String> customTypeNaming;
 
-    /**
-     * Specifies JavaScript function for getting custom TypeScript names for Java classes.
-     * Function can return undefined if default name should be used.
-     * Function signature: <code>function getName(className: string, classSimpleName: string): string | null | undefined;</code>
-     * Example function: <code>function(name, simpleName) { if (name.startsWith('cz.')) return 'Test' + simpleName; }</code>
-     */
-    @Parameter
-    private String customTypeNamingFunction;
+	/**
+	 * Specifies JavaScript function for getting custom TypeScript names for
+	 * Java classes. Function can return undefined if default name should be
+	 * used. Function signature:
+	 * <code>function getName(className: string, classSimpleName: string): string | null | undefined;</code>
+	 * Example function:
+	 * <code>function(name, simpleName) { if (name.startsWith('cz.')) return 'Test' + simpleName; }</code>
+	 */
+	@Parameter
+	private String customTypeNamingFunction;
 
-    /**
-     * List of files which will be referenced using triple-slash directive: /// &lt;reference path="file" />.
-     * This can be used with "customTypeMappings" to provide needed TypeScript types.
-     */
-    @Parameter
-    private List<String> referencedFiles;
+	/**
+	 * List of files which will be referenced using triple-slash directive: ///
+	 * &lt;reference path="file" />. This can be used with "customTypeMappings"
+	 * to provide needed TypeScript types.
+	 */
+	@Parameter
+	private List<String> referencedFiles;
 
-    /**
-     * List of import declarations which will be added to generated output.
-     * This can be used with "customTypeMappings" to provide needed TypeScript types.
-     */
-    @Parameter
-    private List<String> importDeclarations;
+	/**
+	 * List of import declarations which will be added to generated output. This
+	 * can be used with "customTypeMappings" to provide needed TypeScript types.
+	 */
+	@Parameter
+	private List<String> importDeclarations;
 
-    /**
-     * List of custom mappings.
-     * Each item specifies TypeScript type which will be used for particular Java class.
-     * Item format is: "javaClass:typescriptType".
-     * For example mapping "ZonedDateTime" to "string" would be added as "java.time.ZonedDateTime:string".
-     */
-    @Parameter
-    private List<String> customTypeMappings;
+	/**
+	 * List of custom mappings. Each item specifies TypeScript type which will
+	 * be used for particular Java class. Item format is:
+	 * "javaClass:typescriptType". For example mapping "ZonedDateTime" to
+	 * "string" would be added as "java.time.ZonedDateTime:string".
+	 */
+	@Parameter
+	private List<String> customTypeMappings;
 
-    /**
-     * Specifies how {@link java.util.Date} will be mapped.
-     * Supported values are 'asDate', 'asNumber', 'asString'.
-     * Default value is 'asDate'.
-     */
-    @Parameter
-    private DateMapping mapDate;
+	/**
+	 * Specifies how {@link java.util.Date} will be mapped. Supported values are
+	 * 'asDate', 'asNumber', 'asString'. Default value is 'asDate'.
+	 */
+	@Parameter
+	private DateMapping mapDate;
 
-    /**
-     * Specifies how enums will be mapped.
-     * Supported values are 'asUnion', 'asInlineUnion', 'asNumberBasedEnum'.
-     * Default value is 'asUnion'.
-     * Value 'asUnion' creates type alias to union of string enum values.
-     * Value 'asInlineUnion' creates union of enum values on places where the enum is used.
-     * Value 'asNumberBasedEnum' creates enum of named number values.
-     */
-    @Parameter
-    private EnumMapping mapEnum;
+	/**
+	 * Specifies how enums will be mapped. Supported values are 'asUnion',
+	 * 'asInlineUnion', 'asNumberBasedEnum'. Default value is 'asUnion'. Value
+	 * 'asUnion' creates type alias to union of string enum values. Value
+	 * 'asInlineUnion' creates union of enum values on places where the enum is
+	 * used. Value 'asNumberBasedEnum' creates enum of named number values.
+	 */
+	@Parameter
+	private EnumMapping mapEnum;
 
-    /**
-     * Specifies whether classes will be mapped to classes or interfaces.
-     * Supported values are 'asInterfaces', 'asClasses'.
-     * Default value is 'asInterfaces'.
-     * Value 'asClasses' can only be used in implementation files (.ts).
-     */
-    @Parameter
-    private ClassMapping mapClasses;
+	/**
+	 * Specifies whether classes will be mapped to classes or interfaces.
+	 * Supported values are 'asInterfaces', 'asClasses'. Default value is
+	 * 'asInterfaces'. Value 'asClasses' can only be used in implementation
+	 * files (.ts).
+	 */
+	@Parameter
+	private ClassMapping mapClasses;
 
-    /**
-     * If true tagged unions will not be generated for Jackson 2 polymorphic types.
-     */
-    @Parameter
-    private boolean disableTaggedUnions;
+	/**
+	 * If true tagged unions will not be generated for Jackson 2 polymorphic
+	 * types.
+	 */
+	@Parameter
+	private boolean disableTaggedUnions;
 
-    /**
-     * If true interface for JAX-RS REST application will be generated.
-     */
-    @Parameter
-    private boolean generateJaxrsApplicationInterface;
+	/**
+	 * If true interface for JAX-RS REST application will be generated.
+	 */
+	@Parameter
+	private boolean generateJaxrsApplicationInterface;
 
-    /**
-     * If true client for JAX-RS REST application will be generated.
-     */
-    @Parameter
-    private boolean generateJaxrsApplicationClient;
+	/**
+	 * If true client for JAX-RS REST application will be generated.
+	 */
+	@Parameter
+	private boolean generateJaxrsApplicationClient;
 
-    /**
-     * Specifies HTTP response type in JAXRS application.
-     * Default value is <code>Promise&amp;R></code> which means data object returned asynchronously.
-     * Useful for example when underlying HTTP response object (like <code>XMLHttpRequest</code> or <code>AxiosPromise</code>)
-     * is returned instead of actual response data.
-     */
-    @Parameter
-    private String restResponseType;
+	/**
+	 * Specifies HTTP response type in JAXRS application. Default value is
+	 * <code>Promise&amp;R></code> which means data object returned
+	 * asynchronously. Useful for example when underlying HTTP response object
+	 * (like <code>XMLHttpRequest</code> or <code>AxiosPromise</code>) is
+	 * returned instead of actual response data.
+	 */
+	@Parameter
+	private String restResponseType;
 
-    /**
-     * Specifies HTTP request options type in JAXRS application.
-     * By default no <code>options</code> parameter is generated.
-     * Useful when passing additional parameters to underlying HTTP request method (like jQuery ajax settings or <code>AxiosRequestConfig</code>).
-     */
-    @Parameter
-    private String restOptionsType;
+	/**
+	 * Specifies HTTP request options type in JAXRS application. By default no
+	 * <code>options</code> parameter is generated. Useful when passing
+	 * additional parameters to underlying HTTP request method (like jQuery ajax
+	 * settings or <code>AxiosRequestConfig</code>).
+	 */
+	@Parameter
+	private String restOptionsType;
 
-    /**
-     * Specifies custom class implementing {@link cz.habarta.typescript.generator.TypeProcessor}.
-     * This allows to customize how Java types are mapped to TypeScript.
-     * For example it is possible to implement TypeProcessor
-     * for {@link com.google.common.base.Optional} from guava or for Java 8 date/time classes.
-     */
-    @Parameter
-    private String customTypeProcessor;
+	/**
+	 * Specifies custom class implementing
+	 * {@link cz.habarta.typescript.generator.TypeProcessor}. This allows to
+	 * customize how Java types are mapped to TypeScript. For example it is
+	 * possible to implement TypeProcessor for
+	 * {@link com.google.common.base.Optional} from guava or for Java 8
+	 * date/time classes.
+	 */
+	@Parameter
+	private String customTypeProcessor;
 
-    /**
-     * If true TypeScript declarations (interfaces, properties) will be sorted alphabetically.
-     */
-    @Parameter
-    private boolean sortDeclarations;
+	/**
+	 * If true TypeScript declarations (interfaces, properties) will be sorted
+	 * alphabetically.
+	 */
+	@Parameter
+	private boolean sortDeclarations;
 
-    /**
-     * If true TypeScript type declarations (interfaces) will be sorted alphabetically.
-     */
-    @Parameter
-    private boolean sortTypeDeclarations;
+	/**
+	 * If true TypeScript type declarations (interfaces) will be sorted
+	 * alphabetically.
+	 */
+	@Parameter
+	private boolean sortTypeDeclarations;
 
-    /**
-     * If true generated file will not contain comment at the top.
-     * By default there is a comment with timestamp and typescript-generator version.
-     * So it might be useful to suppress this comment if the file is in source control and is regenerated in build.
-     */
-    @Parameter
-    private boolean noFileComment;
+	/**
+	 * If true generated file will not contain comment at the top. By default
+	 * there is a comment with timestamp and typescript-generator version. So it
+	 * might be useful to suppress this comment if the file is in source control
+	 * and is regenerated in build.
+	 */
+	@Parameter
+	private boolean noFileComment;
 
-    /**
-     * List of Javadoc XML files to search for documentation comments.
-     * These files should be created using "com.github.markusbernhardt.xmldoclet.XmlDoclet" (com.github.markusbernhardt:xml-doclet).
-     * Javadoc comments are added to output declarations as JSDoc comments.
-     * For more information see Wiki page 'https://github.com/vojtechhabarta/typescript-generator/wiki/Javadoc'.
-     */
-    @Parameter
-    private List<File> javadocXmlFiles;
+	/**
+	 * List of Javadoc XML files to search for documentation comments. These
+	 * files should be created using
+	 * "com.github.markusbernhardt.xmldoclet.XmlDoclet"
+	 * (com.github.markusbernhardt:xml-doclet). Javadoc comments are added to
+	 * output declarations as JSDoc comments. For more information see Wiki page
+	 * 'https://github.com/vojtechhabarta/typescript-generator/wiki/Javadoc'.
+	 */
+	@Parameter
+	private List<File> javadocXmlFiles;
 
-    /**
-     * List of extensions specified as fully qualified class name.
-     * Known extensions:
-     * cz.habarta.typescript.generator.ext.TypeGuardsForJackson2PolymorphismExtension
-     */
-    @Parameter
-    private List<String> extensions;
+	/**
+	 * List of extensions specified as fully qualified class name. Known
+	 * extensions:
+	 * cz.habarta.typescript.generator.ext.TypeGuardsForJackson2PolymorphismExtension
+	 */
+	@Parameter
+	private List<String> extensions;
 
-    /**
-     * The presence of any annotation in this list on a JSON property will cause
-     * the typescript-generator to treat that property as optional when generating
-     * the corresponding TypeScript interface.
-     * Example optional annotation: @javax.annotation.Nullable
-     */
-    @Parameter
-    private List<String> optionalAnnotations;
+	/**
+	 * The presence of any annotation in this list on a JSON property will cause
+	 * the typescript-generator to treat that property as optional when
+	 * generating the corresponding TypeScript interface. Example optional
+	 * annotation: @javax.annotation.Nullable
+	 */
+	@Parameter
+	private List<String> optionalAnnotations;
 
-    /**
-     * If true NPM package.json will be generated.
-     * Only applicable when 'outputKind' is set to 'module'.
-     * NPM package name and version can be specified using 'npmName' and 'npmVersion' parameters.
-     */
-    @Parameter
-    private boolean generateNpmPackageJson;
+	/**
+	 * If true NPM package.json will be generated. Only applicable when
+	 * 'outputKind' is set to 'module'. NPM package name and version can be
+	 * specified using 'npmName' and 'npmVersion' parameters.
+	 */
+	@Parameter
+	private boolean generateNpmPackageJson;
 
-    /**
-     * Specifies NPM package name.
-     * Only applicable when 'generateNpmPackageJson' parameter is 'true'.
-     * Default value is <code>${project.artifactId}</code>.
-     */
-    @Parameter
-    private String npmName;
+	/**
+	 * Specifies NPM package name. Only applicable when 'generateNpmPackageJson'
+	 * parameter is 'true'. Default value is <code>${project.artifactId}</code>.
+	 */
+	@Parameter
+	private String npmName;
 
-    /**
-     * Specifies NPM package version.
-     * Only applicable when 'generateNpmPackageJson' parameter is 'true'.
-     * Default value is <code>1.0.0</code>.
-     */
-    @Parameter
-    private String npmVersion;
+	/**
+	 * Specifies NPM package version. Only applicable when
+	 * 'generateNpmPackageJson' parameter is 'true'. Default value is
+	 * <code>1.0.0</code>.
+	 */
+	@Parameter
+	private String npmVersion;
 
-    /**
-     * Specifies how strings will be quoted.
-     * Supported values are 'doubleQuotes', 'singleQuotes'.
-     * Default value is 'doubleQuotes'.
-     */
-    @Parameter
-    private StringQuotes stringQuotes;
+	/**
+	 * Specifies how strings will be quoted. Supported values are
+	 * 'doubleQuotes', 'singleQuotes'. Default value is 'doubleQuotes'.
+	 */
+	@Parameter
+	private StringQuotes stringQuotes;
 
-    /**
-     * Display warnings when bean serializer is not found.
-     */
-    @Parameter(defaultValue = "true")
-    private boolean displaySerializerWarning;
+	/**
+	 * Display warnings when bean serializer is not found.
+	 */
+	@Parameter(defaultValue = "true")
+	private boolean displaySerializerWarning;
 
-    /**
-     * Turns off Jackson2 automatic module discovery.
-     */
-    @Parameter
-    private boolean disableJackson2ModuleDiscovery;
+	/**
+	 * Turns off Jackson2 automatic module discovery.
+	 */
+	@Parameter
+	private boolean disableJackson2ModuleDiscovery;
 
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
+	@Parameter(defaultValue = "${project}", readonly = true, required = true)
+	private MavenProject project;
 
-    @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
-    private String projectBuildDirectory;
+	@Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
+	private String projectBuildDirectory;
 
-    @Override
-    public void execute() {
-        try {
-            TypeScriptGenerator.printVersion();
+	@Parameter
+	private List<String> mixins;
 
-            // class loader
-            final List<URL> urls = new ArrayList<>();
-            for (String element : project.getCompileClasspathElements()) {
-                urls.add(new File(element).toURI().toURL());
-            }
-            final URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
+	@Override
+	public void execute() {
+		try {
+			TypeScriptGenerator.printVersion();
 
-            // Settings
-            final Settings settings = new Settings();
-            if (outputFileType != null) {
-                settings.outputFileType = outputFileType;
-            }
-            settings.outputKind = outputKind;
-            settings.module = module;
-            settings.namespace = namespace;
-            settings.umdNamespace = umdNamespace;
-            settings.setExcludeFilter(excludeClasses, excludeClassPatterns);
-            settings.jsonLibrary = jsonLibrary;
-            settings.declarePropertiesAsOptional = declarePropertiesAsOptional;
-            settings.declarePropertiesAsReadOnly = declarePropertiesAsReadOnly;
-            settings.removeTypeNamePrefix = removeTypeNamePrefix;
-            settings.removeTypeNameSuffix = removeTypeNameSuffix;
-            settings.addTypeNamePrefix = addTypeNamePrefix;
-            settings.addTypeNameSuffix = addTypeNameSuffix;
-            settings.customTypeNaming = Settings.convertToMap(customTypeNaming);
-            settings.customTypeNamingFunction = customTypeNamingFunction;
-            settings.referencedFiles = referencedFiles;
-            settings.importDeclarations = importDeclarations;
-            settings.customTypeMappings = Settings.convertToMap(customTypeMappings);
-            settings.mapDate = mapDate;
-            settings.mapEnum = mapEnum;
-            settings.mapClasses = mapClasses;
-            settings.disableTaggedUnions = disableTaggedUnions;
-            settings.generateJaxrsApplicationInterface = generateJaxrsApplicationInterface;
-            settings.generateJaxrsApplicationClient = generateJaxrsApplicationClient;
-            settings.restResponseType = restResponseType;
-            settings.restOptionsType = restOptionsType;
-            settings.loadCustomTypeProcessor(classLoader, customTypeProcessor);
-            settings.sortDeclarations = sortDeclarations;
-            settings.sortTypeDeclarations = sortTypeDeclarations;
-            settings.noFileComment = noFileComment;
-            settings.javadocXmlFiles = javadocXmlFiles;
-            settings.loadExtensions(classLoader, extensions);
-            settings.loadIncludePropertyAnnotations(classLoader, includePropertyAnnotations);
-            settings.loadOptionalAnnotations(classLoader, optionalAnnotations);
-            settings.generateNpmPackageJson = generateNpmPackageJson;
-            settings.npmName = npmName == null && generateNpmPackageJson ? project.getArtifactId() : npmName;
-            settings.npmVersion = npmVersion == null && generateNpmPackageJson ? settings.getDefaultNpmVersion() : npmVersion;
-            settings.setStringQuotes(stringQuotes);
-            settings.displaySerializerWarning = displaySerializerWarning;
-            settings.disableJackson2ModuleDiscovery = disableJackson2ModuleDiscovery;
-            settings.classLoader = classLoader;
-            final File output = outputFile != null
-                    ? outputFile
-                    : new File(new File(projectBuildDirectory, "typescript-generator"), project.getArtifactId() + settings.getExtension());
-            settings.validateFileName(output);
+			// class loader
+			final List<URL> urls = new ArrayList<>();
+			for (String element : project.getCompileClasspathElements()) {
+				urls.add(new File(element).toURI().toURL());
+			}
+			final URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[0]),
+					Thread.currentThread().getContextClassLoader());
 
-            // TypeScriptGenerator
-            new TypeScriptGenerator(settings).generateTypeScript(
-                    Input.fromClassNamesAndJaxrsApplication(classes, classPatterns, classesFromJaxrsApplication, classesFromAutomaticJaxrsApplication, settings.getExcludeFilter(), classLoader),
-                    Output.to(output)
-            );
+			// Settings
+			final Settings settings = new Settings();
+			if (outputFileType != null) {
+				settings.outputFileType = outputFileType;
+			}
+			settings.outputKind = outputKind;
+			settings.module = module;
+			settings.namespace = namespace;
+			settings.umdNamespace = umdNamespace;
+			settings.setExcludeFilter(excludeClasses, excludeClassPatterns);
+			settings.jsonLibrary = jsonLibrary;
+			settings.declarePropertiesAsOptional = declarePropertiesAsOptional;
+			settings.declarePropertiesAsReadOnly = declarePropertiesAsReadOnly;
+			settings.removeTypeNamePrefix = removeTypeNamePrefix;
+			settings.removeTypeNameSuffix = removeTypeNameSuffix;
+			settings.addTypeNamePrefix = addTypeNamePrefix;
+			settings.addTypeNameSuffix = addTypeNameSuffix;
+			settings.customTypeNaming = Settings.convertToMap(customTypeNaming);
+			settings.customTypeNamingFunction = customTypeNamingFunction;
+			settings.referencedFiles = referencedFiles;
+			settings.importDeclarations = importDeclarations;
+			settings.customTypeMappings = Settings.convertToMap(customTypeMappings);
+			settings.mapDate = mapDate;
+			settings.mapEnum = mapEnum;
+			settings.mapClasses = mapClasses;
+			settings.disableTaggedUnions = disableTaggedUnions;
+			settings.generateJaxrsApplicationInterface = generateJaxrsApplicationInterface;
+			settings.generateJaxrsApplicationClient = generateJaxrsApplicationClient;
+			settings.restResponseType = restResponseType;
+			settings.restOptionsType = restOptionsType;
+			settings.loadCustomTypeProcessor(classLoader, customTypeProcessor);
+			settings.sortDeclarations = sortDeclarations;
+			settings.sortTypeDeclarations = sortTypeDeclarations;
+			settings.noFileComment = noFileComment;
+			settings.javadocXmlFiles = javadocXmlFiles;
+			settings.loadExtensions(classLoader, extensions);
+			settings.loadIncludePropertyAnnotations(classLoader, includePropertyAnnotations);
+			settings.loadOptionalAnnotations(classLoader, optionalAnnotations);
+			settings.generateNpmPackageJson = generateNpmPackageJson;
+			settings.npmName = npmName == null && generateNpmPackageJson ? project.getArtifactId() : npmName;
+			settings.npmVersion = npmVersion == null && generateNpmPackageJson ? settings.getDefaultNpmVersion()
+					: npmVersion;
+			settings.setStringQuotes(stringQuotes);
+			settings.displaySerializerWarning = displaySerializerWarning;
+			settings.disableJackson2ModuleDiscovery = disableJackson2ModuleDiscovery;
+			settings.classLoader = classLoader;
+			final File output = outputFile != null ? outputFile
+					: new File(new File(projectBuildDirectory, "typescript-generator"),
+							project.getArtifactId() + settings.getExtension());
+			settings.validateFileName(output);
+			
+			for (String mixin : mixins) {
+				String[] mixinClasses = mixin.split(":");
+				Class<?> inputClass = Class.forName(mixinClasses[0]);
+				Class<?> mixinClass = Class.forName(mixinClasses[1]);
+				settings.mixins.computeIfAbsent(inputClass,(k)->new HashSet<Class<?>>()).add(mixinClass);
+			}
 
-        } catch (DependencyResolutionRequiredException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+			// TypeScriptGenerator
+			new TypeScriptGenerator(settings).generateTypeScript(
+					Input.fromClassNamesAndJaxrsApplication(classes, classPatterns, classesFromJaxrsApplication,
+							classesFromAutomaticJaxrsApplication, settings.getExcludeFilter(), classLoader),
+					Output.to(output));
+
+		} catch (DependencyResolutionRequiredException | IOException | ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }
