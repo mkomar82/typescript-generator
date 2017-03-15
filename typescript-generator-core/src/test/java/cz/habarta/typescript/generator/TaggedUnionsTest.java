@@ -99,6 +99,7 @@ public class TaggedUnionsTest {
                 "    radius: number;\n" +
                 "}\n" +
                 "\n" +
+                "const ShapeUnion = {Square:Square as ShapeUnion,Rectangle:Rectangle as ShapeUnion,Circle:Circle as ShapeUnion,};\n" +
                 "type ShapeUnion = Square | Rectangle | Circle;\n" +
                 ""
                 ).replace('\'', '"');
@@ -134,6 +135,7 @@ public class TaggedUnionsTest {
                 "interface IQuadrilateral2 extends IShape2 {\n" +
                 "}\n" +
                 "\n" +
+                "const IShape2Union = {CSquare2:CSquare2 as IShape2Union,CRectangle2:CRectangle2 as IShape2Union,CCircle2:CCircle2 as IShape2Union,};\n" +
                 "type IShape2Union = CSquare2 | CRectangle2 | CCircle2;\n" +
                 ""
                 ).replace('\'', '"');

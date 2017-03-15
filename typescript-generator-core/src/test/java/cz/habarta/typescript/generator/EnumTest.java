@@ -20,6 +20,7 @@ public class EnumTest {
                 "    direction: Direction;\n" +
                 "}\n" +
                 "\n" +
+                "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,};\n" +
                 "type Direction = 'North' | 'East' | 'South' | 'West';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -31,7 +32,8 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(Direction.class));
         final String expected = (
                 "\n" +
-                "type Direction = 'North' | 'East' | 'South' | 'West';\n"
+        		 "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,};\n" +
+                 "type Direction = 'North' | 'East' | 'South' | 'West';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
     }
@@ -77,6 +79,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(SideWithJsonPropertyAnnotations.class));
         final String expected = (
                 "\n" +
+        		"const SideWithJsonPropertyAnnotations = {'left-side':'left-side' as SideWithJsonPropertyAnnotations,'right-side':'right-side' as SideWithJsonPropertyAnnotations,};\n" +
                 "type SideWithJsonPropertyAnnotations = 'left-side' | 'right-side';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -88,6 +91,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(SideWithJsonValueAnnotations.class));
         final String expected = (
                 "\n" +
+                "const SideWithJsonValueAnnotations = {'left-side':'left-side' as SideWithJsonValueAnnotations,'right-side':'right-side' as SideWithJsonValueAnnotations,};\n" +
                 "type SideWithJsonValueAnnotations = 'left-side' | 'right-side';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -99,6 +103,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(EmptyEnum.class));
         final String expected = (
                 "\n" +
+        		"const EmptyEnum = {};\n" +
                 "type EmptyEnum = never;\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
