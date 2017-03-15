@@ -5,7 +5,7 @@
     <parent>
         <groupId>cz.habarta.typescript-generator</groupId>
         <artifactId>typescript-generator</artifactId>
-        <version>1.19.icm.4-SNAPSHOT</version>
+        <version>1.19.icm.4</version>
     </parent>
 
     <artifactId>typescript-generator-core</artifactId>
