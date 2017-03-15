@@ -2,6 +2,7 @@
 package cz.habarta.typescript.generator.emitter;
 
 import cz.habarta.typescript.generator.*;
+import cz.habarta.typescript.generator.TsType.UnionType;
 import cz.habarta.typescript.generator.compiler.EnumKind;
 import cz.habarta.typescript.generator.compiler.EnumMemberModel;
 import cz.habarta.typescript.generator.util.Utils;
@@ -222,6 +223,15 @@ public class Emitter {
             final String genericParameters = alias.getTypeParameters().isEmpty()
                     ? ""
                     : "<" + Utils.join(alias.getTypeParameters(), ", ") + ">";
+            if(alias.getDefinition() instanceof UnionType){
+            	UnionType union = (UnionType) alias.getDefinition();
+            	StringBuffer typeValues = new StringBuffer();
+            	for(TsType type:union.types){
+            		String typeName = type.format(settings);
+            		typeValues.append(typeName+":"+typeName+" as "+alias.getName()+",");
+            	}
+            	writeIndentedLine(exportKeyword, "const " + alias.getName() + " = {" + typeValues + "};");
+            }
             writeIndentedLine(exportKeyword, "type " + alias.getName() + genericParameters + " = " + alias.getDefinition().format(settings) + ";");
         }
     }
