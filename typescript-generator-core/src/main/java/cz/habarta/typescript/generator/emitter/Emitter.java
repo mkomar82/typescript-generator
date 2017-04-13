@@ -226,9 +226,16 @@ public class Emitter {
             if(alias.getDefinition() instanceof UnionType){
             	UnionType union = (UnionType) alias.getDefinition();
             	StringBuffer typeValues = new StringBuffer();
+            	StringBuffer allValues = new StringBuffer("values:[");
             	for(TsType type:union.types){
             		String typeName = type.format(settings);
-            		typeValues.append(typeName+":"+typeName+" as "+alias.getName()+",");
+            		String typeValue = typeName+" as "+alias.getName();
+            		typeValues.append(typeName).append(":").append(typeValue).append(",");
+            		allValues.append(typeValue).append(",");
+            	}
+            	if(typeValues.length() != 0){
+            		allValues.append("]");
+            		typeValues.append(allValues);
             	}
             	writeIndentedLine(exportKeyword, "const " + alias.getName() + " = {" + typeValues + "};");
             }

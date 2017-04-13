@@ -1,10 +1,12 @@
 
 package cz.habarta.typescript.generator;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import static org.junit.Assert.*;
-import org.junit.Test;
 
 
 public class EnumTest {
@@ -20,7 +22,7 @@ public class EnumTest {
                 "    direction: Direction;\n" +
                 "}\n" +
                 "\n" +
-                "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,};\n" +
+                "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,values:['North' as Direction,'East' as Direction,'South' as Direction,'West' as Direction,]};\n" +
                 "type Direction = 'North' | 'East' | 'South' | 'West';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -32,7 +34,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(Direction.class));
         final String expected = (
                 "\n" +
-        		 "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,};\n" +
+        		 "const Direction = {'North':'North' as Direction,'East':'East' as Direction,'South':'South' as Direction,'West':'West' as Direction,values:['North' as Direction,'East' as Direction,'South' as Direction,'West' as Direction,]};\n" +
                  "type Direction = 'North' | 'East' | 'South' | 'West';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -79,7 +81,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(SideWithJsonPropertyAnnotations.class));
         final String expected = (
                 "\n" +
-        		"const SideWithJsonPropertyAnnotations = {'left-side':'left-side' as SideWithJsonPropertyAnnotations,'right-side':'right-side' as SideWithJsonPropertyAnnotations,};\n" +
+        		"const SideWithJsonPropertyAnnotations = {'left-side':'left-side' as SideWithJsonPropertyAnnotations,'right-side':'right-side' as SideWithJsonPropertyAnnotations,values:['left-side' as SideWithJsonPropertyAnnotations,'right-side' as SideWithJsonPropertyAnnotations,]};\n" +
                 "type SideWithJsonPropertyAnnotations = 'left-side' | 'right-side';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);
@@ -91,7 +93,7 @@ public class EnumTest {
         final String output = new TypeScriptGenerator(settings).generateTypeScript(Input.from(SideWithJsonValueAnnotations.class));
         final String expected = (
                 "\n" +
-                "const SideWithJsonValueAnnotations = {'left-side':'left-side' as SideWithJsonValueAnnotations,'right-side':'right-side' as SideWithJsonValueAnnotations,};\n" +
+                "const SideWithJsonValueAnnotations = {'left-side':'left-side' as SideWithJsonValueAnnotations,'right-side':'right-side' as SideWithJsonValueAnnotations,values:['left-side' as SideWithJsonValueAnnotations,'right-side' as SideWithJsonValueAnnotations,]};\n" +
                 "type SideWithJsonValueAnnotations = 'left-side' | 'right-side';\n"
                 ).replace("'", "\"");
         assertEquals(expected, output);

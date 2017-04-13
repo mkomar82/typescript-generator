@@ -1,12 +1,14 @@
 
 package cz.habarta.typescript.generator;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.List;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class TaggedUnionsTest {
@@ -99,7 +101,7 @@ public class TaggedUnionsTest {
                 "    radius: number;\n" +
                 "}\n" +
                 "\n" +
-                "const ShapeUnion = {Square:Square as ShapeUnion,Rectangle:Rectangle as ShapeUnion,Circle:Circle as ShapeUnion,};\n" +
+                "const ShapeUnion = {Square:Square as ShapeUnion,Rectangle:Rectangle as ShapeUnion,Circle:Circle as ShapeUnion,values:[Square as ShapeUnion,Rectangle as ShapeUnion,Circle as ShapeUnion,]};\n" +
                 "type ShapeUnion = Square | Rectangle | Circle;\n" +
                 ""
                 ).replace('\'', '"');
@@ -135,7 +137,7 @@ public class TaggedUnionsTest {
                 "interface IQuadrilateral2 extends IShape2 {\n" +
                 "}\n" +
                 "\n" +
-                "const IShape2Union = {CSquare2:CSquare2 as IShape2Union,CRectangle2:CRectangle2 as IShape2Union,CCircle2:CCircle2 as IShape2Union,};\n" +
+                "const IShape2Union = {CSquare2:CSquare2 as IShape2Union,CRectangle2:CRectangle2 as IShape2Union,CCircle2:CCircle2 as IShape2Union,values:[CSquare2 as IShape2Union,CRectangle2 as IShape2Union,CCircle2 as IShape2Union,]};\n" +
                 "type IShape2Union = CSquare2 | CRectangle2 | CCircle2;\n" +
                 ""
                 ).replace('\'', '"');
